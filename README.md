@@ -13,28 +13,23 @@ No paid LLM keys required; models run locally via Hugging Face + PyTorch. Works 
 
 ## ✨ Pipeline
 
+## Pipeline (abstract)
+
 ```mermaid
 flowchart TD
-    A[Upload notes / draft] --> B[Keyword Extraction]
-    B --> C[arXiv Retrieval]
-    C --> D[SPECTER Ranking]
-    D --> E[Full-PDF Extraction (optional)]
-    D -. "fallback" .-> F[Abstracts only]
-    E --> G[PEGASUS Summarization]
-    F --> G
-    G --> H[Markdown Draft]
+  A[Upload notes / draft] --> B[Keyword Extraction]
+  B --> C[arXiv Retrieval]
+  C --> D[SPECTER Ranking]
+  D --> E[Summarize Background]
+  E --> F[Compose Research-style Draft]
+  F --> G[Markdown Output]
 
-    style A fill:#E8F0FE,stroke:#3367D6,stroke-width:2px
-    style B fill:#FFF7E6,stroke:#FBBC04,stroke-width:2px
-    style C fill:#E6F4EA,stroke:#34A853,stroke-width:2px
-    style D fill:#E0F7FA,stroke:#00ACC1,stroke-width:2px
-    style E fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px
-    style F fill:#FFF7E6,stroke:#FBBC04,stroke-width:2px,stroke-dasharray: 4 2
-    style G fill:#F1F8E9,stroke:#7CB342,stroke-width:2px
-    style H fill:#FFF3E0,stroke:#FF6F00,stroke-width:2px
+  %% optional helper (comment out if not wanted)
+  A -. optional .-> X[Light edits / clarifications]
+  X -. feeds .-> B
 ```
 
-> If full‑PDF extraction fails or is disabled, the system falls back to summarizing abstracts only.
+*This diagram intentionally keeps the flow abstract and independent of any specific PDF/full‑text step.*
 
 ---
 
