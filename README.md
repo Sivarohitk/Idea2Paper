@@ -1,150 +1,183 @@
+# Idea2Paper — Upload → auto‑find related papers → draft
 
-# Idea2Paper — Free Local Chat + RAG → non‑LLM Scientific Drafts
+A lightweight, **local-first** pipeline that helps you turn raw notes or experiment logs into a research‑style **Markdown draft**.  
+It extracts **keywords** from your upload, retrieves relevant papers from **arXiv**, ranks them with **SPECTER**, summarizes the background, and assembles a structured draft you can edit and extend.
 
-A lightweight pipeline that turns your own notes/experiment logs into a short, research‑style draft by:
-- extracting **keywords** from your upload,
-- pulling **related arXiv papers**,
-- ranking them with **SPECTER** (semantic similarity),
-- and summarizing the background with **PEGASUS‑arXiv** (abstracts or full‑PDFs).
-
-No paid LLM keys required; models run locally via Hugging Face + PyTorch. Works on **CPU** or **CUDA** if available.
+> **Credit request (no license added):** if this project helps you, please add a short acknowledgement in your paper or repo.  
+> _“Built with the Idea2Paper pipeline (keyword→arXiv→SPECTER→summary→draft).”_
 
 ---
 
-## ✨ Pipeline
+## Pipeline (abstract)
 
 ```mermaid
 flowchart TD
-    A[Upload notes / draft] --> B[Keyword Extraction]
-    B --> C[arXiv Retrieval]
-    C --> D[SPECTER Ranking]
-    D --> E[Full-PDF Extraction (optional)]
-    D -. "fallback" .-> F[Abstracts only]
-    E --> G[PEGASUS Summarization]
-    F --> G
-    G --> H[Markdown Draft]
+  A[Upload notes / draft] --> B[Keyword Extraction]
+  B --> C[arXiv Retrieval]
+  C --> D[SPECTER Ranking]
+  D --> E[Summarize Background]
+  E --> F[Compose Research-style Draft]
+  F --> G[Markdown Output]
 
-    style A fill:#E8F0FE,stroke:#3367D6,stroke-width:2px
-    style B fill:#FFF7E6,stroke:#FBBC04,stroke-width:2px
-    style C fill:#E6F4EA,stroke:#34A853,stroke-width:2px
-    style D fill:#E0F7FA,stroke:#00ACC1,stroke-width:2px
-    style E fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px
-    style F fill:#FFF7E6,stroke:#FBBC04,stroke-width:2px,stroke-dasharray: 4 2
-    style G fill:#F1F8E9,stroke:#7CB342,stroke-width:2px
-    style H fill:#FFF3E0,stroke:#FF6F00,stroke-width:2px
+  %% optional helper (comment out if not wanted)
+  A -. optional .-> X[Light edits / clarifications]
+  X -. feeds .-> B
 ```
 
-> If full‑PDF extraction fails or is disabled, the system falls back to summarizing abstracts only.
+*This diagram intentionally keeps the flow abstract and independent of any specific PDF/full‑text step.*
 
 ---
 
-## 🚀 Quickstart (Windows)
+## Why this exists
+- When you start a new idea, you often need **fast background context** and a **coherent scaffold** to write from.
+- This app aims to give you a **ranked list of related work** and a **background section** in minutes, locally.
+- It avoids paid APIs; models come from **Hugging Face** and run **CPU or GPU** (CUDA if available).
 
-```powershell
+---
+
+## Features
+- 📥 **Upload**: PDF/DOCX/TXT/MD/CSV (text extracted locally).
+- 🏷️ **Keyword extraction** from your notes.
+- 🔎 **arXiv retrieval** (no API key needed), then **SPECTER ranking**.
+- ✂️ **Summarization** with `google/pegasus-arxiv` (switchable).
+- 🧩 **Draft builder**: Background + short per‑paper synopses + references list.
+- 🖥️ **Local-first**: no third‑party LLM APIs required.
+- ⚙️ **GPU aware** (if `torch.cuda.is_available()`), otherwise CPU.
+
+---
+
+## Quick start
+
+### 1) Clone and create a virtual environment
+```bash
 git clone https://github.com/<your-username>/Idea2Paper.git
 cd Idea2Paper
 
-# Create & activate venv
+# (Windows PowerShell)
 python -m venv .venv
-. .venv/Scripts/activate
+.venv\Scripts\Activate.ps1
 
-# Install deps
-pip install --upgrade pip
+# (macOS/Linux)
+# python3 -m venv .venv
+# source .venv/bin/activate
+```
+
+### 2) Install
+```bash
+pip install --upgrade pip wheel
 pip install -r requirements.txt
+```
 
-# Run the Streamlit app
+> **GPU note (Windows/NVIDIA):**  
+> Install a Torch build that matches your CUDA runtime. For example:
+> ```powershell
+> pip uninstall -y torch torchvision torchaudio
+> pip install --index-url https://download.pytorch.org/whl/cu121 torch torchvision torchaudio
+> ```
+> If you hit the **CVE-2025-32434** warning loading HF weights, upgrade Torch to **2.6+**.
+
+### 3) Run
+```bash
 streamlit run src/app.py
 ```
-
-### GPU (optional)
-If you have an NVIDIA GPU, CUDA Toolkit/Driver installed:
-- The app auto‑detects CUDA. You can force it via env var:
-  ```powershell
-  set IDEA2PAPER_DEVICE=cuda
-  ```
-- Models will use **fp16** on GPU to save VRAM and speed up generation.
-
-> **Torch vulnerability notice:** Some Transformers checkpoints require `torch>=2.6` (or safetensors) because of a security fix (CVE‑2025‑32434). If you hit a “please upgrade torch” error, use:
-> ```powershell
-> pip install --upgrade "torch>=2.6" --index-url https://download.pytorch.org/whl/cu121  # choose cu version to match your CUDA
-> ```
+Open the local URL shown (e.g., `http://localhost:8502`).
 
 ---
 
-## 🗂️ Repository Layout
+## Usage (TL;DR)
+1. **Upload** your notes/draft/experiment log.  
+2. Click **Extract text & suggest keywords**. Edit if you like.  
+3. **Retrieve** related arXiv papers.  
+4. **Rank** with SPECTER. Inspect the table.  
+5. **Summarize & Generate** → produces a Markdown draft, downloadable and saved under `drafts/`.
 
+> You can tweak `Top K` and retrieval size in the left sidebar for speed vs depth.
+
+---
+
+## Configuration
+
+Most knobs live in `src/config.py`. Important ones:
+
+| Name | Default | Meaning |
+|---|---:|---|
+| `DEVICE` | auto (`cuda` if available) | Target device for models |
+| `TOP_K` | 10 | How many top papers to use in the draft |
+| `MAX_ARXIV_RESULTS` | 40 | How many arXiv results to fetch before ranking |
+| `EMBED_MODEL` | `sentence-transformers/allenai-specter` | Paper embedding model |
+| `SUM_MODEL` | `google/pegasus-arxiv` | Background summarizer |
+
+You can also set environment variables:
+```bash
+# Force GPU (if available)
+# Windows PowerShell
+$env:IDEA2PAPER_DEVICE="cuda"
+
+# bash/zsh
+export IDEA2PAPER_DEVICE=cuda
+```
+
+---
+
+## Folder layout
 ```
 Idea2Paper/
-├─ flowchart/                  # Mermaid diagram(s) for the README
-│  └─ pipeline.md
-├─ data_samples/               # (Empty in repo; add your own test files) 
-├─ drafts/                     # Generated drafts (git-ignored)
-├─ notebook/
-│  └─ demo.ipynb               # Optional smoke tests / quick experiments
-├─ src/
-│  ├─ app.py                   # Streamlit UI
-│  ├─ config.py                # Central configuration
-│  ├─ ingest.py                # Upload parsing (pdf/docx/txt/md/csv)
-│  ├─ keywords.py              # Keyphrase extraction
-│  ├─ retrieval.py             # arXiv query builder + fetch
-│  ├─ ranker.py                # SPECTER-based re-ranking
-│  ├─ summarizer.py            # PEGASUS summarization (abstracts / full-PDF)
-│  ├─ generator.py             # Compose Markdown draft
-│  ├─ utils.py                 # Helpers
-│  └─ fulltext.py              # (Optional) PDF extraction helper
-├─ .gitignore
+├─ src/                # application code (Streamlit app + pipeline modules)
+├─ drafts/             # generated Markdown drafts (kept out of git by .gitignore)
+├─ data_samples/       # optional local sample docs (empty committed with .gitignore)
+├─ notebook/           # optional demo/experiments
+├─ flowchart/          # pipeline diagram source
 ├─ requirements.txt
-└─ README.md
+├─ README.md
+└─ .gitignore
 ```
 
 ---
 
-## ⚙️ Config (important knobs)
+## What I learned / current limitations
 
-All tunable via `src/config.py` or environment variables:
+Even with GPU, **classic summarizers** (e.g., PEGASUS) can feel:
+- ✅ Good at **high-level background**.
+- ⚠️ Weak at **fine-grained, task‑specific writing** (method details, polished prose).  
+- ⚠️ Sensitive to **noisy inputs** and long concatenations of abstracts.
 
-- `DEVICE` — `"cuda"` or `"cpu"` (auto-detected; override with `IDEA2PAPER_DEVICE`)
-- `TOP_K` — how many top ranked papers to use in the draft
-- `MAX_ARXIV_RESULTS` — how many raw arXiv results to fetch before ranking
-- `USE_FULL_PDFS` — `true/false` (if `true`, attempt to download & summarize full PDFs)
-- `PDF_TIMEOUT`, `PDF_MAX_BYTES`, `PDF_CHAR_CAP` — safety rails for PDF downloads
-- `SUM_MODEL` — default summarizer (`google/pegasus-arxiv`)
-- `EMBED_MODEL` — SPECTER encoder (`sentence-transformers/allenai-specter`)
+This is **not** a drop‑in replacement for writing—think of it as a **bootstrap** that speeds up literature mapping and gives you a first background block to edit.
 
 ---
 
-## ✅ What works well
+## Future work
 
-- No API keys needed; local semantic ranking + summarization
-- RAG based on your upload + arXiv related work
-- Simple UI that makes it easy to iterate and save drafts
-
-## 😕 What disappointed me
-
-- The generated “paper” is concise and **not** as rich as LLM‑assisted drafts.
-- Quality depends heavily on upload clarity and arXiv retrieval.
-- Full‑PDF extraction can be slow/unreliable depending on source PDFs.
-
-## 🧭 Roadmap / ideas to improve
-
-- Swap to a **local instruction‑tuned LLM** (Ollama) for drafting & section structure
-- **Citation scraping** and reference formatting (BibTeX export)
-- Domain‑specific rankers (SciBERT, multi‑query retrieval, category filters)
-- Smarter **hierarchical long‑context** summarization across multiple PDFs with chunk memory
-- Better PDF parsing (layout‑aware extraction / figure caption mining)
+- 🔁 Replace/augment PEGASUS with **modern instruction‑tuned LLMs** (local), with guardrails.
+- 📄 Optional **full‑text ingestion** when available (pdf → text), with section‑aware summarization.
+- 🧠 Better **keywording** (KeyBERT or in‑domain models).
+- 🧷 Smarter **citation stitching** (dedupe authors/titles/years; BibTeX export).
+- ⚡ **Caching** for re‑runs (arXiv + embeddings + summaries) to make iterative work snappier.
+- 🧪 Add a **“write by sections”** mode (Background, Related Work, Approach, etc.).
 
 ---
 
-## 🧰 Troubleshooting
+## Troubleshooting
 
-- **CUDA found but slow?** Some models still do heavy tokenization on CPU; that’s expected. You can still speed up generation by using fp16 on GPU.
-- **Transformers says “upgrade torch”?** Install `torch>=2.6` or switch to safetensors‑only models.
-- **arXiv returns zero results?** Tweak keywords; try fewer/more general terms.
+- **Torch vulnerability error** about `torch.load` → Update to **torch 2.6+** or use safetensors‑only weights.
+- **CUDA not used** → Ensure the right **CUDA‑enabled torch wheel** is installed (see Quick start).
+- **Slow runs** → Lower **Top K** to 5; reduce `MAX_ARXIV_RESULTS`; run on GPU; close heavy apps.
+- **Windows PowerShell execution policy** blocks `.ps1` → run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 ---
 
-## 🤝 Credit
+## Give credit 🙌
 
-No license file right now. If you use this repo in your work or demos, a short credit like
-> “Built on *Idea2Paper* (https://github.com/Sivarohitk/Idea2Paper)”  
-is highly appreciated.
+I’m not adding a license for now. If this project helps you, please **add an acknowledgement** like:
+> _“This work used the Idea2Paper pipeline (keyword→arXiv→SPECTER→summary→draft).”_
+
+A star on GitHub also helps others find it. Thanks!
+
+---
+
+## Acknowledgements
+- [arXiv](https://arxiv.org/)
+- [SPECTER](https://www.specter.ai/) (allenai/`sentence-transformers/allenai-specter`)
+- [PEGASUS](https://huggingface.co/google/pegasus-arxiv)
+- [Sentence-Transformers](https://www.sbert.net/)
+- [Hugging Face Transformers](https://huggingface.co/docs/transformers/index)
+- [Streamlit](https://streamlit.io/)
