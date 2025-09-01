@@ -1,0 +1,90 @@
+# ---------------------------
+# Python bytecode / build
+# ---------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ---------------------------
+# Virtual environments
+# ---------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ---------------------------
+# Notebooks
+# ---------------------------
+.ipynb_checkpoints/
+
+# ---------------------------
+# OS cruft
+# ---------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ---------------------------
+# Editors / IDE
+# ---------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ---------------------------
+# Hugging Face / model caches
+# (keep repo light; these are huge)
+# ---------------------------
+.cache/
+cache/
+hf_cache/
+transformers_cache/
+sentence_transformers/
+torch_cache/
+datasets/
+
+# ---------------------------
+# Trafilatura / web extraction cache
+# ---------------------------
+trafilatura-cache/
+
+# ---------------------------
+# Streamlit
+# ---------------------------
+.streamlit/secrets.toml
+.streamlit/state.json
+
+# ---------------------------
+# Environment / secrets
+# ---------------------------
+.env
+.env.*
+
+# ---------------------------
+# Project outputs (keep folders, ignore files)
+# ---------------------------
+/drafts/*
+!/drafts/.gitkeep
+
+/data_samples/*
+!/data_samples/.gitkeep
+
+/outputs/*
+!/outputs/.gitkeep
+
+/logs/*
+!/logs/.gitkeep
+
+# Temporary files
+*.tmp
+*.log
+*.md~

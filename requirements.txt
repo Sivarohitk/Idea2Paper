@@ -1,0 +1,32 @@
+# App & utils
+streamlit>=1.36.0
+pandas>=2.2.2
+numpy>=1.26.4
+requests>=2.32.2
+
+# Transformers & models
+torch>=2.2.0
+transformers>=4.41.2
+sentence-transformers>=3.0.1
+sentencepiece>=0.1.99
+protobuf>=4.25.3
+tokenizers>=0.15.2
+
+# arXiv retrieval
+arxiv>=2.1.0
+
+# Vector store (FAISS); skip on Windows if wheels unavailable
+faiss-cpu>=1.7.4; sys_platform != "win32"
+
+# Web search + readable extraction
+duckduckgo-search>=6.1.7
+trafilatura>=1.9.0
+beautifulsoup4>=4.12.3
+lxml>=5.2.2
+
+# Document ingestion
+pypdf>=4.2.0
+docx2txt>=0.8
+
+# (Optional) notebook convenience
+ipython>=8.25.0
