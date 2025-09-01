@@ -1,5 +1,6 @@
 
-# Idea2Paper — Free Local Chat + RAG → non‑LLM Scientific Drafts
+# Idea2Paper — Upload → arXiv → SPECTER → PEGASUS (non-LLM scientific drafts)
+
 
 A lightweight pipeline that turns your own notes/experiment logs into a short, research‑style draft by:
 - extracting **keywords** from your upload,
